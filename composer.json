@@ -1,0 +1,39 @@
+{
+    "name": "zeeshantariq/filament-ai-agent",
+    "description": "A FilamentPHP package that adds a Gemini-powered AI assistant to Laravel admin panels.",
+    "keywords": [
+        "filament",
+        "ai",
+        "chatbot",
+        "gemini",
+        "google-ai",
+        "filamentphp"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ZeeshanTariq\\FilamentAiAgent\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Zeeshan Tariq",
+            "email": "zeeshiq58@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "filament/support": "^3.3",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ZeeshanTariq\\FilamentAiAgent\\FilamentAiAgentServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
