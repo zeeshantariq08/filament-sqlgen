@@ -58,6 +58,10 @@ EOT;
             return "ℹ️ I couldn't process your request at the moment. Please try again.";
         }
 
+        if (!preg_match('/^\s*select\s/i', $sqlQuery)) {
+            return "🤖 I'm currently only able to answer questions about viewing information. Try rephrasing your request.";
+        }
+
         try {
             $results = DB::select($sqlQuery);
 
