@@ -1,6 +1,7 @@
+
 # filament-sqlgen
 
-A FilamentPHP package that integrates a Gemini-powered AI assistant to your Laravel admin panel — converting natural
+A FilamentPHP package that integrates a Gemini-powered AI assistant into your Laravel admin panel — converting natural
 language into SQL and showing results in real-time.
 
 ## Features
@@ -32,13 +33,35 @@ composer require zeeshantariq/filament-sqlgen
 php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider"
 ```
 
-### 2. Add your Gemini API key
+### 2. Publish the configuration file
 
-In your `.env` file:
+```bash
+php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider" --tag="config"
+```
+
+This will create a `filament-sqlgen.php` file in your `config` directory. You can customize various settings, such as the default table style or query timeout, in this configuration file.
+
+### 3. Add your Gemini API key and other settings to `.env`
+
+In your `.env` file, add the following configuration settings:
 
 ```env
 GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_API_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+GEMINI_API_TIMEOUT=30
+GEMINI_API_RETRY_ATTEMPTS=3
+GEMINI_LOGGING_ENABLED=false
+GEMINI_CACHE_ENABLED=true
+GEMINI_CACHE_DURATION=60
 ```
+
+- **GEMINI_API_KEY**: Your Google Gemini API key.
+- **GEMINI_API_ENDPOINT**: The Gemini API endpoint for query generation.
+- **GEMINI_API_TIMEOUT**: The timeout value for API calls (default is 30 seconds).
+- **GEMINI_API_RETRY_ATTEMPTS**: The number of retry attempts for failed API calls (default is 3).
+- **GEMINI_LOGGING_ENABLED**: Whether to log Gemini API calls (default is `false`).
+- **GEMINI_CACHE_ENABLED**: Enable or disable caching of query results (default is `true`).
+- **GEMINI_CACHE_DURATION**: The duration (in minutes) for caching query results (default is 60 minutes).
 
 ## Usage
 
@@ -89,4 +112,3 @@ Contributions are welcome! Please fork the repo, make changes, and open a pull r
 ## License
 
 This package is open-source and licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
