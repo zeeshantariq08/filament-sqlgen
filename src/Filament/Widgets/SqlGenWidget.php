@@ -1,14 +1,14 @@
 <?php
 
-namespace ZeeshanTariq\FilamentAiAgent\Filament\Widgets;
+namespace ZeeshanTariq\FilamentSqlGen\Filament\Widgets;
 
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 
-class AIChatBotWidget extends Widget
+class SqlGenWidget extends Widget
 {
-    protected static string $view = 'filament-ai-agent::widgets.a-i-chat-bot-widget';
+    protected static string $view = 'filament-sqlgen::widgets.sql-gen-widget';
 
     public ?string $question = '';
     public ?string $answer = '';

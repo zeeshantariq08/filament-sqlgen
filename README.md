@@ -1,85 +1,92 @@
+# filament-sqlgen
 
-# filament-ai-agent
-
-A FilamentPHP package for integrating a Gemini-powered AI chat agent into Laravel admin panels.
+A FilamentPHP package that integrates a Gemini-powered AI assistant to your Laravel admin panel — converting natural
+language into SQL and showing results in real-time.
 
 ## Features
 
-- **Gemini-powered AI chat agent**: Allows your admin panel users to interact with an AI chatbot that answers queries based on your database.
-- **Real-time SQL generation**: The AI can generate SQL queries based on user questions and execute them dynamically.
-- **Customizable and easy integration**: Integrates seamlessly with FilamentPHP, allowing you to add AI functionality to your Laravel admin panel with minimal effort.
+- **Text-to-SQL AI**: Converts natural language questions into SQL using Google Gemini and executes them securely.
+- **Read-only access**: Executes only `SELECT` queries for safety.
+- **Interactive UI**: Results are rendered in a styled HTML table within the Filament widget.
+- **Easy setup**: Plug-and-play widget for any FilamentPHP admin panel.
 
 ## Requirements
 
 - Laravel 8 or above
-- FilamentPHP 2.x or above
-- Gemini API access (for generating SQL queries based on user input)
+- FilamentPHP 3.x or above
+- A Gemini API key from Google AI
 
 ## Installation
 
-You can install this package via Composer:
+Install via Composer:
 
 ```bash
-composer require zeeshantariq/filament-ai-agent
+composer require zeeshantariq/filament-sqlgen
 ```
 
 ## Configuration
 
-1. **Publish the configuration**:
-   Run the following command to publish the package’s config file:
+### 1. Publish the views (optional)
 
-   ```bash
-   php artisan vendor:publish --provider="ZeeshanTariq\FilamentAiAgent\FilamentAiAgentServiceProvider"
-   ```
+```bash
+php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider"
+```
 
-2. **Set up Gemini API Key**:
-   Create a `.env` file in your project root (if you don’t already have one) and add your Gemini API key like this:
+### 2. Add your Gemini API key
 
-   ```env
-   GEMINI_API_KEY=your-gemini-api-key-here
-   ```
+In your `.env` file:
 
-3. **Add the Widget**:
-   In your Filament admin panel, you can now add the AI chat widget to any page by using the following code:
-
-   ```php
-   use ZeeshanTariq\FilamentAiAgent\Filament\Widgets\AIChatBotWidget;
-
-   // In your Filament page or resource
-   public static function getWidgets(): array
-   {
-       return [
-           AIChatBotWidget::class,
-       ];
-   }
-   ```
+```env
+GEMINI_API_KEY=your-gemini-api-key-here
+```
 
 ## Usage
 
-Once you’ve added the widget to your Filament admin panel, users can ask questions, and the AI will generate SQL queries to answer the query. The results are displayed in a dynamic HTML table.
+Add the widget to your Filament dashboard or resource page:
 
-### Example:
+```php
+use ZeeshanTariq\FilamentSqlGen\Filament\Widgets\SqlGenWidget;
 
-**User asks**: "How many products are in stock today?"
-
-The AI will generate the SQL query:
-
-```sql
-SELECT COUNT(*) FROM products WHERE DATE(created_at) = CURDATE();
+public static function getWidgets(): array
+{
+    return [
+        SqlGenWidget::class,
+    ];
+}
 ```
 
-Then, it will execute this query and display the result in a table format in the admin panel.
+Users can then type questions like:
 
-## Customizing the Widget
+> "How many users signed up today?"
 
-You can customize the appearance and behavior of the chat widget by modifying the views in the package. The main view is located at `resources/views/vendor/filament-ai-agent/widgets/a-i-chat-bot-widget.blade.php`.
+The AI will respond by generating and executing a query like:
 
-Feel free to adjust the design, layout, and content as needed.
+```sql
+SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE();
+```
+
+The results are shown in a neat, scrollable table.
+
+## Security
+
+Only `SELECT` queries are allowed to prevent unwanted changes to your database. Write/update/delete operations are
+blocked by design.
+
+## Customization
+
+To override the widget view:
+
+1. Publish the views as shown above.
+2. Modify the Blade view at:  
+   `resources/views/vendor/filament-sqlgen/widgets/sql-gen-widget.blade.php`
+
+You can style it using Tailwind or customize the logic as needed.
 
 ## Contributing
 
-We welcome contributions! If you find any bugs or want to add features, please fork the repository and submit a pull request. Be sure to follow the contribution guidelines provided.
+Contributions are welcome! Please fork the repo, make changes, and open a pull request.
 
 ## License
 
-This package is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This package is open-source and licensed under the [MIT license](https://opensource.org/licenses/MIT).
+

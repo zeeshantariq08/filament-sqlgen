@@ -1,19 +1,21 @@
 {
-    "name": "zeeshantariq/filament-ai-agent",
-    "description": "A FilamentPHP package that adds a Gemini-powered AI assistant to Laravel admin panels.",
+    "name": "zeeshantariq/filament-sqlgen",
+    "description": "A FilamentPHP package that generates SQL from natural language using Gemini AI.",
     "keywords": [
         "filament",
         "ai",
-        "chatbot",
+        "sqlgen",
         "gemini",
+        "text-to-sql",
         "google-ai",
-        "filamentphp"
+        "filamentphp",
+        "natural-language-to-sql"
     ],
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "ZeeshanTariq\\FilamentAiAgent\\": "src/"
+            "ZeeshanTariq\\FilamentSqlGen\\": "src/"
         }
     },
     "authors": [
@@ -30,7 +32,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "ZeeshanTariq\\FilamentAiAgent\\FilamentAiAgentServiceProvider"
+                "ZeeshanTariq\\FilamentSqlGen\\FilamentSqlGenServiceProvider"
             ]
         }
     },
