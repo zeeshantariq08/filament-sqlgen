@@ -95,7 +95,6 @@ EOT;
 
     protected function handleDynamicQuery(string $sqlQuery): string
     {
-        Log::info('Received SQL query', ['sql_query' => $sqlQuery]);
 
         if (empty($sqlQuery)) {
             return "ℹ️ I couldn't process your request at the moment. Please try again.";
@@ -111,7 +110,6 @@ EOT;
 
         try {
             $results = DB::select($cleanQuery);
-            Log::info('SQL query executed successfully', ['sql_query' => $cleanQuery, 'results' => $results]);
 
             return $this->formatResults($results);
         } catch (\Exception $e) {
