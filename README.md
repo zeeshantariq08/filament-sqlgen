@@ -36,7 +36,7 @@ php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGe
 ### 2. Publish the configuration file
 
 ```bash
-php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider" --tag="config"
+php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider" --tag="filament-sqlgen-config"
 ```
 
 This will create a `filament-sqlgen.php` file in your `config` directory. You can customize various settings, such as the default table style or query timeout, in this configuration file.
