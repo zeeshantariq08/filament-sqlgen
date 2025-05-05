@@ -58,6 +58,31 @@ GEMINI_CACHE_DURATION=60
 - **GEMINI_API_KEY**: Your Google Gemini API key.
 - **GEMINI_API_ENDPOINT**: The Gemini API endpoint for query generation.
 
+### 4. Multiple Provider Configuration
+
+In the `config/filament-sqlgen.php` file, you can choose which AI provider to use (either Gemini or OpenAI).
+
+```php
+'provider' => env('AI_PROVIDER', 'gemini'),
+
+'gemini' => [
+    'api_key' => env('GEMINI_API_KEY'),
+    'endpoint' => env('GEMINI_API_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'),
+],
+
+'openai' => [
+    'api_key' => env('OPENAI_API_KEY'),
+    'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
+    'endpoint' => env('OPENAI_API_ENDPOINT', 'https://api.openai.com/v1/chat/completions'),
+],
+```
+
+Set your preferred provider in `.env`:
+
+```env
+AI_PROVIDER=gemini  # or 'openai'
+```
+
 ## Usage
 
 Add the widget to your Filament dashboard or resource page:
