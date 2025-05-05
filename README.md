@@ -57,11 +57,6 @@ GEMINI_CACHE_DURATION=60
 
 - **GEMINI_API_KEY**: Your Google Gemini API key.
 - **GEMINI_API_ENDPOINT**: The Gemini API endpoint for query generation.
-- **GEMINI_API_TIMEOUT**: The timeout value for API calls (default is 30 seconds).
-- **GEMINI_API_RETRY_ATTEMPTS**: The number of retry attempts for failed API calls (default is 3).
-- **GEMINI_LOGGING_ENABLED**: Whether to log Gemini API calls (default is `false`).
-- **GEMINI_CACHE_ENABLED**: Enable or disable caching of query results (default is `true`).
-- **GEMINI_CACHE_DURATION**: The duration (in minutes) for caching query results (default is 60 minutes).
 
 ## Usage
 
