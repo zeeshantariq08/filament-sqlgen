@@ -41,47 +41,38 @@ php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGe
 
 This will create a `filament-sqlgen.php` file in your `config` directory. You can customize various settings, such as the default table style or query timeout, in this configuration file.
 
-### 3. Add your Gemini API key and other settings to `.env`
+### 3. Add your AI settings to `.env`
 
-In your `.env` file, add the following configuration settings:
+🔹 **For Gemini**:
+In your `.env` file, add the following:
 
 ```env
-GEMINI_API_KEY=your-gemini-api-key-here
+AI_PROVIDER=gemini
+
+GEMINI_API_KEY=your-gemini-api-key
 GEMINI_API_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
-GEMINI_API_TIMEOUT=30
-GEMINI_API_RETRY_ATTEMPTS=3
-GEMINI_LOGGING_ENABLED=false
-GEMINI_CACHE_ENABLED=true
-GEMINI_CACHE_DURATION=60
 ```
 
-- **GEMINI_API_KEY**: Your Google Gemini API key.
-- **GEMINI_API_ENDPOINT**: The Gemini API endpoint for query generation.
-
-### 4. Multiple Provider Configuration
-
-In the `config/filament-sqlgen.php` file, you can choose which AI provider to use (either Gemini or OpenAI).
-
-```php
-'provider' => env('AI_PROVIDER', 'gemini'),
-
-'gemini' => [
-    'api_key' => env('GEMINI_API_KEY'),
-    'endpoint' => env('GEMINI_API_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'),
-],
-
-'openai' => [
-    'api_key' => env('OPENAI_API_KEY'),
-    'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
-    'endpoint' => env('OPENAI_API_ENDPOINT', 'https://api.openai.com/v1/chat/completions'),
-],
-```
-
-Set your preferred provider in `.env`:
+🔹 **For OpenAI**:
+In your `.env` file, add the following:
 
 ```env
-AI_PROVIDER=gemini  # or 'openai'
+AI_PROVIDER=openai
+
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_API_ENDPOINT=https://api.openai.com/v1/chat/completions
 ```
+
+### Configuration Notes:
+
+- **AI_PROVIDER**: Choose between `gemini` and `openai`. This selects which AI service to use.
+
+- **GEMINI_API_KEY / OPENAI_API_KEY**: Your respective API keys for Gemini and OpenAI.
+
+- **GEMINI_API_ENDPOINT / OPENAI_API_ENDPOINT**: The API endpoint for Gemini or OpenAI.
+
+- **OPENAI_MODEL**: The OpenAI model you want to use (e.g., `gpt-3.5-turbo`).
 
 ## Usage
 
