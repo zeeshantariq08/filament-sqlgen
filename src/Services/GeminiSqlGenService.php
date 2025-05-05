@@ -40,7 +40,9 @@ Use only the following tables and columns from the database:
 {$schema}
 
 Instructions:
-- Only return a valid SELECT SQL query.
+- ❗ Only return a valid SELECT SQL query.
+- ❗ Never return queries that modify data (DROP, DELETE, INSERT, UPDATE, TRUNCATE).
+- ❗ If the user asks to delete, drop, or modify data, respond with: "❌ Only SELECT queries are allowed. Destructive operations are not supported."
 - Do NOT invent tables or columns.
 - Do NOT include markdown or comments.
 - Use lowercase column names in Laravel-style like 'created_at'.

@@ -42,7 +42,7 @@ class SqlGenWidget extends Widget
 
         // Ensure it starts with a SELECT statement
         if (!preg_match('/^\s*select\s/i', $cleanQuery)) {
-            return "🤖 I'm only allowed to run SELECT queries for safety. Please rephrase your question to ask for information.";
+            return "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
         }
 
         try {
