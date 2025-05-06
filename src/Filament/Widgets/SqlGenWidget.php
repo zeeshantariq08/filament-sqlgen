@@ -5,6 +5,7 @@ namespace ZeeshanTariq\FilamentSqlGen\Filament\Widgets;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use ZeeshanTariq\FilamentSqlGen\Models\SqlGenLog;
 use ZeeshanTariq\FilamentSqlGen\Services\GeminiSqlGenService;
 
 class SqlGenWidget extends Widget
@@ -16,9 +17,10 @@ class SqlGenWidget extends Widget
 
     public function ask()
     {
+        $start = microtime(true); // start timer
         $service = $this->resolveSqlService();
         $sqlQuery = $service->generateSql($this->question);
-        $this->answer = $this->handleDynamicQuery($sqlQuery);
+        $this->answer = $this->handleDynamicQuery($sqlQuery, $start); // pass start time
     }
 
     protected function resolveSqlService(): GeminiSqlGenService
@@ -30,32 +32,60 @@ class SqlGenWidget extends Widget
         };
     }
 
-    protected function handleDynamicQuery(string $sqlQuery): string
+    protected function handleDynamicQuery(string $sqlQuery,float $startTime): string
     {
+        $message = '';
+        $cleanQuery = '';
+        $responseTimeMs = null;
 
         if (empty($sqlQuery)) {
-            return "ℹ️ I couldn't process your request at the moment. Please try again.";
+            $message = "ℹ️ I couldn't process your request at the moment. Please try again.";
+        } else {
+            // Clean unwanted prefixes like 'sql' and trim whitespace
+            $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
+
+            // Ensure it starts with a SELECT statement
+            if (!preg_match('/^\s*select\s/i', $cleanQuery)) {
+                $message = "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
+            } else {
+                try {
+                    $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
+                    $results = DB::select($cleanQuery);
+                    $message = $this->formatResults($results);
+                    $this->logSqlGenInteraction($this->question, $cleanQuery, json_encode($results), $responseTimeMs);
+                    return $message;
+                } catch (\Exception $e) {
+                    Log::error('SQL query execution failed', [
+                        'sql_query' => $cleanQuery,
+                        'exception' => $e->getMessage(),
+                    ]);
+                    $message = "❌ There was an issue processing your request. Please try again later.";
+                }
+            }
         }
 
-        // Clean unwanted prefixes like 'sql' and trim whitespace
-        $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
+        $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
+        // Log the interaction even if it failed or was blocked
+        $this->logSqlGenInteraction($this->question, $cleanQuery, $message,$responseTimeMs);
 
-        // Ensure it starts with a SELECT statement
-        if (!preg_match('/^\s*select\s/i', $cleanQuery)) {
-            return "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
-        }
+        return $message;
+    }
 
-        try {
-            $results = DB::select($cleanQuery);
 
-            return $this->formatResults($results);
-        } catch (\Exception $e) {
-            Log::error('SQL query execution failed', [
-                'sql_query' => $cleanQuery,
-                'exception' => $e->getMessage(),
-            ]);
-            return "❌ There was an issue processing your request. Please try again later.";
-        }
+    protected function logSqlGenInteraction(string $question, string $sqlQuery, string $response, float $responseTimeMs): void
+    {
+        Log::info('SQL Generation Interaction', [
+            'question' => $question,
+            'sql_query' => $sqlQuery,
+            'response' => $response,
+        ]);
+        // Create a new record in the `sql_gen_logs` table
+        SqlGenLog::create([
+            'question' => $question,  // Store the original question
+            'sql_query' => $sqlQuery,
+            'response' => $response,
+            'response_time_ms' => $responseTimeMs,
+        ]);
     }
 
     protected function formatResults(array $results): string

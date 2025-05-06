@@ -39,6 +39,14 @@ php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGe
 php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider" --tag="filament-sqlgen-config"
 ```
 
+## Publishing Migrations
+
+To publish the package's migrations to your application's `database/migrations` directory, run the following Artisan command:
+
+```bash
+php artisan vendor:publish --provider="ZeeshanTariq\FilamentSqlGen\FilamentSqlGenServiceProvider" --tag="filament-sqlgen-migrations"
+
+
 This will create a `filament-sqlgen.php` file in your `config` directory. You can customize various settings, such as the default table style or query timeout, in this configuration file.
 
 ### 3. Add your AI settings to `.env`
@@ -115,6 +123,10 @@ To override the widget view:
    `resources/views/vendor/filament-sqlgen/widgets/sql-gen-widget.blade.php`
 
 You can style it using Tailwind or customize the logic as needed.
+
+## History Log
+
+Added history log functionality to track SQL generation events.
 
 ## Contributing
 

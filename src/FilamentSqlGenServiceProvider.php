@@ -2,9 +2,12 @@
 
 namespace ZeeshanTariq\FilamentSqlGen;
 
+use Filament\Facades\Filament;
 use Spatie\LaravelPackageTools\Package;
+use Filament\Resources\Resource;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Livewire\Livewire;
+use ZeeshanTariq\FilamentSqlGen\Filament\Resources\SqlGenLogResource;
 use ZeeshanTariq\FilamentSqlGen\Filament\Widgets\SqlGenWidget;
 
 class FilamentSqlGenServiceProvider extends PackageServiceProvider
@@ -16,18 +19,19 @@ class FilamentSqlGenServiceProvider extends PackageServiceProvider
         $package
             ->name(static::$name)
             ->hasViews()
-            ->hasConfigFile(); // Register the config file
+            ->hasConfigFile(); // Removed hasMigration() to avoid duplication
     }
 
     public function packageBooted(): void
     {
+        // Load the package views
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'filament-sqlgen');
 
+        // Register the Livewire component
         Livewire::component(
             'zeeshan-tariq.filament-sql-gen.filament.widgets.sql-gen-widget',
             SqlGenWidget::class
         );
-
     }
 
     public function packageRegistered(): void
@@ -36,5 +40,11 @@ class FilamentSqlGenServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../config/filament-sqlgen.php' => config_path('filament-sqlgen.php'),
         ], 'filament-sqlgen-config');
+
+        // Publish the migration file (with dynamic timestamp to avoid duplicates)
+        $this->publishes([
+            __DIR__ . '/../database/migrations/create_sql_gen_logs_table.php' => database_path('migrations/' . date('Y_m_d_His') . '_create_sql_gen_logs_table.php'),
+        ], 'filament-sqlgen-migrations');
     }
+
 }
