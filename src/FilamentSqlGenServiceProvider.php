@@ -45,6 +45,11 @@ class FilamentSqlGenServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../database/migrations/create_sql_gen_logs_table.php' => database_path('migrations/' . date('Y_m_d_His') . '_create_sql_gen_logs_table.php'),
         ], 'filament-sqlgen-migrations');
+
+        // Publish the database schema file
+        $this->publishes([
+            __DIR__ . '/../database/schema/database_schema.yaml' => database_path('schema/database_schema.yaml'),
+        ], 'filament-sqlgen-schema');
     }
 
 }

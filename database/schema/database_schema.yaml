@@ -1,0 +1,29 @@
+tables:
+  homeowner_registration_ownerships:
+    description: "Stores current and historical ownership records for homeowners."
+    columns:
+      id: "Primary key."
+      registration_id: "Foreign key linking to the homeowner's registration."
+      from_user_id: "User ID of the previous owner."
+      to_user_id: "User ID of the new owner."
+      owner_status: "Indicates if the ownership is 'current' or 'previous'."
+      ownership_method: "Method used for ownership transfer."
+      created_at: "Timestamp when the record was created."
+      updated_at: "Timestamp when the record was last updated."
+      transfer_date: "Date when the ownership was transferred."
+
+  homeowner_registration_ownerships_archives:
+    description: "Archives of ownership records that have been deleted or are no longer active."
+    columns:
+      id: "Primary key."
+      registration_id: "Foreign key linking to the homeowner's registration."
+      from_user_id: "User ID of the previous owner."
+      to_user_id: "User ID of the new owner."
+      owner_status: "Indicates if the ownership was 'current' or 'previous' before archiving."
+      ownership_method: "Method used for ownership transfer."
+      created_at: "Timestamp when the record was created."
+      updated_at: "Timestamp when the record was last updated."
+      transfer_date: "Date when the ownership was transferred."
+      deleted_by: "User ID who performed the deletion."
+      deleted_user_type: "Type of user who performed the deletion."
+      deleted_at: "Timestamp when the record was deleted."

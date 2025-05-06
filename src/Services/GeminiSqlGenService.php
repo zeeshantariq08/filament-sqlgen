@@ -4,6 +4,8 @@ namespace ZeeshanTariq\FilamentSqlGen\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Yaml\Yaml;
+
 
 class GeminiSqlGenService implements SqlGenServiceInterface
 {
@@ -53,17 +55,39 @@ EOT;
 
     protected function getDatabaseSchemaSummary(): string
     {
+        $yamlPath = base_path('database/schema/database_schema.yaml');
+        $yamlSchema = [];
+
+        if (file_exists($yamlPath)) {
+            try {
+                $parsedYaml = Yaml::parseFile($yamlPath);
+                if (isset($parsedYaml['tables']) && is_array($parsedYaml['tables'])) {
+                    $yamlSchema = $parsedYaml['tables'];
+                } else {
+                    Log::warning("The 'tables' key is missing or not an array in the YAML schema.");
+                }
+            } catch (\Exception $e) {
+                Log::error('Error parsing YAML schema file', ['exception' => $e->getMessage()]);
+            }
+        }
+
         $tables = DB::select('SHOW TABLES');
-        $schema = [];
+        $schemaSummary = [];
 
         foreach ($tables as $tableObj) {
             $tableName = array_values((array)$tableObj)[0];
             $columns = DB::select("SHOW COLUMNS FROM {$tableName}");
             $columnNames = array_map(fn($col) => $col->Field, $columns);
-            $schema[] = "- {$tableName}(" . implode(', ', $columnNames) . ")";
+
+            if (isset($yamlSchema[$tableName])) {
+                $description = $yamlSchema[$tableName]['description'] ?? 'No description provided.';
+                $schemaSummary[] = "- {$tableName}: {$description}\n  Columns: " . implode(', ', $columnNames);
+            } else {
+                $schemaSummary[] = "- {$tableName}\n  Columns: " . implode(', ', $columnNames);
+            }
         }
 
-        return implode("\n", $schema);
+        return implode("\n", $schemaSummary);
     }
 
     protected function parseResponse($response): string
