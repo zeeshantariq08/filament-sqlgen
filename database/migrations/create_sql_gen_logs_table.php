@@ -13,7 +13,7 @@ class CreateSqlGenLogsTable extends Migration
      */
     public function up()
     {
-        Schema::create('sql_gen_logs', function (Blueprint $table) {
+        Schema::connection(config('filament-sqlgen.database_connection'))->create('sql_gen_logs', function (Blueprint $table) {
             $table->id();
             $table->text('question');  // New column for storing the user's question
             $table->json('sql_query'); // Use json type for storing SQL query
@@ -30,6 +30,6 @@ class CreateSqlGenLogsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sql_gen_logs');
+        Schema::connection(config('filament-sqlgen.database_connection'))->dropIfExists('sql_gen_logs');
     }
 }
