@@ -31,5 +31,8 @@ return [
         'endpoint' => env('OPENAI_API_ENDPOINT', 'https://api.openai.com/v1/chat/completions'),
     ],
 
+
+    'database_connection' => env('DB_CONNECTION_LOGS', 'mysql'),
+
 ];
 
