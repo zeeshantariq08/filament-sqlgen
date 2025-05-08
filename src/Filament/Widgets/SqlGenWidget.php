@@ -14,13 +14,16 @@ class SqlGenWidget extends Widget
 
     public ?string $question = '';
     public ?string $answer = '';
+    public array $notes = [];
+
 
     public function ask()
     {
         $start = microtime(true); // start timer
         $service = $this->resolveSqlService();
         $sqlQuery = $service->generateSql($this->question);
-        $this->answer = $this->handleDynamicQuery($sqlQuery, $start); // pass start time
+        $this->notes = $sqlQuery['notes'] ?? []; // Save notes separately
+        $this->answer = $this->handleDynamicQuery($sqlQuery['sql'], $start, $sqlQuery['notes']);
     }
 
     protected function resolveSqlService(): GeminiSqlGenService
@@ -32,41 +35,46 @@ class SqlGenWidget extends Widget
         };
     }
 
-    protected function handleDynamicQuery(string $sqlQuery,float $startTime): string
+    protected function handleDynamicQuery(string $sqlQuery, float $startTime, array $notes = []): string
     {
         $message = '';
         $cleanQuery = '';
         $responseTimeMs = null;
 
+        // Check if there are any notes and prepend them to the message before executing the query
+        if (!empty($notes)) {
+            $message = "<div class='mt-2 text-sm text-blue-600'>" . implode('<br>', array_map('e', $notes)) . "</div>";
+        }
+
         if (empty($sqlQuery)) {
-            $message = "ℹ️ I couldn't process your request at the moment. Please try again.";
+            $message .= "ℹ️ I couldn't process your request at the moment. Please try again.";
         } else {
-            // Clean unwanted prefixes like 'sql' and trim whitespace
             $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
 
-            // Ensure it starts with a SELECT statement
             if (!preg_match('/^\s*select\s/i', $cleanQuery)) {
-                $message = "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
+                $message .= "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
             } else {
                 try {
+                    // Start measuring query execution time
                     $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
+
+                    // Execute the query and format the results
                     $results = DB::select($cleanQuery);
-                    $message = $this->formatResults($results);
+                    $message .= $this->formatResults($results);  // Append formatted results
                     $this->logSqlGenInteraction($this->question, $cleanQuery, json_encode($results), $responseTimeMs);
-                    return $message;
                 } catch (\Exception $e) {
                     Log::error('SQL query execution failed', [
                         'sql_query' => $cleanQuery,
                         'exception' => $e->getMessage(),
                     ]);
-                    $message = "❌ There was an issue processing your request. Please try again later.";
+                    $message .= "❌ There was an issue processing your request. Please try again later.";
                 }
             }
         }
 
+        // Log the interaction with response time
         $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
-        // Log the interaction even if it failed or was blocked
-        $this->logSqlGenInteraction($this->question, $cleanQuery, $message,$responseTimeMs);
+        $this->logSqlGenInteraction($this->question, $cleanQuery, $message, $responseTimeMs);
 
         return $message;
     }

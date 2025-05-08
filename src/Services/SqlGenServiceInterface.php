@@ -4,5 +4,5 @@ namespace ZeeshanTariq\FilamentSqlGen\Services;
 
 interface SqlGenServiceInterface
 {
-    public function generateSql(string $question): string;
+    public function generateSql(string $question): array;
 }

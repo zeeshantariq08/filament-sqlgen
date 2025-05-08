@@ -1,4 +1,5 @@
 <?php
+
 namespace ZeeshanTariq\FilamentSqlGen\Services;
 
 use Illuminate\Support\Facades\DB;
@@ -6,15 +7,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Yaml\Yaml;
 
-
 class GeminiSqlGenService implements SqlGenServiceInterface
 {
-    public function generateSql(string $question): string
+    public function generateSql(string $question): array
     {
         try {
             $apiKey = config('filament-sqlgen.gemini.api_key');
             $endpoint = config('filament-sqlgen.gemini.endpoint');
-
             $endpointWithKey = "{$endpoint}?key={$apiKey}";
 
             $response = Http::post($endpointWithKey, [
@@ -26,7 +25,10 @@ class GeminiSqlGenService implements SqlGenServiceInterface
             return $this->parseResponse($response);
         } catch (\Exception $e) {
             Log::error('Gemini API request failed', ['exception' => $e->getMessage()]);
-            return '';
+            return [
+                'sql' => '',
+                'notes' => ['❌ Failed to connect to Gemini API.']
+            ];
         }
     }
 
@@ -42,16 +44,20 @@ Use only the following tables and columns from the database:
 {$schema}
 
 Instructions:
-- ❗ Only return a valid SELECT SQL query.
+- ✅ Always try to generate a valid SELECT SQL query from the user request.
 - ❗ Never return queries that modify data (DROP, DELETE, INSERT, UPDATE, TRUNCATE).
-- ❗ If the user asks to delete, drop, or modify data, respond with: "❌ Only SELECT queries are allowed. Destructive operations are not supported."
+- ❗ If the user's intent is clearly to modify data, return no SQL and instead respond with: "❌ Only SELECT queries are allowed. Destructive operations are not supported."
+- ❗ If the question includes non-existent columns or tables, skip them in the SQL and add a note like: "ℹ️ i could not find 'nationality' instead i found these: 'first_name', 'last_name', 'email', 'password', 'created_at', 'updated_at'."
+- ❗ Do NOT reject queries just because a column isn't found. Instead, return the partial SQL and the note.
 - Do NOT invent tables or columns.
-- Do NOT include markdown or comments.
-- Use lowercase column names in Laravel-style like 'created_at'.
+- Do NOT include markdown (no ```sql).
+- Use lowercase column names like 'created_at'.
+- Assume all questions are safe unless they explicitly ask to *change* the data.
 
 User Question: {$question}
 EOT;
     }
+
 
     protected function getDatabaseSchemaSummary(): string
     {
@@ -90,16 +96,27 @@ EOT;
         return implode("\n", $schemaSummary);
     }
 
-    protected function parseResponse($response): string
+    protected function parseResponse($response): array
     {
         $data = $response->json();
-        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        $rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
-        $text = preg_replace('/```(.*?)```/is', '$1', $text);
-        $text = preg_replace('/--.*$/m', '', $text);
-        $text = preg_replace('/\/\*.*?\*\//s', '', $text);
-        preg_match('/^(.*?;)/s', trim($text), $matches);
+        // Remove markdown
+        $cleanText = preg_replace('/```(sql)?|```/', '', $rawText);
 
-        return isset($matches[1]) ? trim($matches[1]) : trim($text);
+        // Extract SQL part and note part
+        $sql = trim(preg_replace('/ℹ️.*$/m', '', $cleanText)); // remove inline note
+        $notes = [];
+
+        // Extract any ℹ️ or ❌ notes
+        if (preg_match_all('/(ℹ️|❌).*$/m', $cleanText, $matches)) {
+            $notes = array_map('trim', $matches[0]);
+        }
+
+        return [
+            'sql' => $sql,
+            'notes' => $notes,
+        ];
     }
+
 }
