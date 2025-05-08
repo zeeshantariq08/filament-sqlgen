@@ -15,4 +15,10 @@ class SqlGenLog extends Model
         'response' => 'json',   // Cast response as JSON
     ];
 
+    public function __construct(array $attributes = [])
+    {
+        $this->connection = config('filament-sqlgen.database_connection');
+        parent::__construct($attributes);
+    }
+
 }
