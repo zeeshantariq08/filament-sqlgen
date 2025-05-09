@@ -38,6 +38,7 @@ class GeminiSqlGenService implements SqlGenServiceInterface
         $today = now()->format('Y-m-d');
         $currentYear = now()->year;
 
+
         return <<<EOT
 You are a strict SQL assistant for a Laravel MySQL application.
 
