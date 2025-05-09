@@ -22,6 +22,9 @@ class GeminiSqlGenService implements SqlGenServiceInterface
                 ]
             ]);
 
+            Log::info('Raw Response from Gemini:', ['response' => $response->json()]);
+
+
             return $this->parseResponse($response);
         } catch (\Exception $e) {
             Log::error('Gemini API request failed', ['exception' => $e->getMessage()]);

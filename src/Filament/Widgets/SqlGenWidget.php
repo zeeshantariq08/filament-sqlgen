@@ -82,11 +82,6 @@ class SqlGenWidget extends Widget
 
     protected function logSqlGenInteraction(string $question, string $sqlQuery, string $response, float $responseTimeMs): void
     {
-        Log::info('SQL Generation Interaction', [
-            'question' => $question,
-            'sql_query' => $sqlQuery,
-            'response' => $response,
-        ]);
         // Create a new record in the `sql_gen_logs` table
         SqlGenLog::create([
             'question' => $question,  // Store the original question
