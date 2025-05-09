@@ -35,6 +35,8 @@ class GeminiSqlGenService implements SqlGenServiceInterface
     protected function buildPrompt(string $question): string
     {
         $schema = $this->getDatabaseSchemaSummary();
+        $today = now()->format('Y-m-d');
+        $currentYear = now()->year;
 
         return <<<EOT
 You are a strict SQL assistant for a Laravel MySQL application.
@@ -43,6 +45,9 @@ ONLY use the tables and columns provided below. DO NOT invent any columns or tab
 
 Schema (use ONLY these tables and columns):
 {$schema}
+
+Assume today's date is {$today}. If the user asks about a specific month (e.g. "April") but does not mention a year, always assume they mean {$currentYear}.
+
 
 Instructions:
 - ✅ Always return a valid SELECT SQL query based on the user request.
