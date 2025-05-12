@@ -16,9 +16,19 @@ class GeminiSqlGenService implements SqlGenServiceInterface
             $endpoint = config('filament-sqlgen.gemini.endpoint');
             $endpointWithKey = "{$endpoint}?key={$apiKey}";
 
+            $temperature = config('filament-sqlgen.gemini.temperature', 0.2);
+            $maxTokens = config('filament-sqlgen.gemini.max_output_tokens', 1024);
+
             $response = Http::post($endpointWithKey, [
                 'contents' => [
                     ['parts' => [['text' => $this->buildPrompt($question)]]]
+                ],
+                'generationConfig' => [
+                    'temperature' => $temperature,
+                    'topK' => 1,
+                    'topP' => 1.0,
+                    'maxOutputTokens' => $maxTokens,
+                    'stopSequences' => []
                 ]
             ]);
 
@@ -37,6 +47,12 @@ class GeminiSqlGenService implements SqlGenServiceInterface
         $schema = $this->getDatabaseSchemaSummary();
         $today = now()->format('Y-m-d');
         $currentYear = now()->year;
+
+        // Sensitive columns list
+        $sensitiveColumns = ['password', 'secret', 'api_key', 'token'];
+
+        // Check if the user mentioned excluding sensitive data
+        $excludeSensitiveData = stripos($question, 'exclude sensitive data') !== false;
 
         return <<<EOT
 You are a strict SQL assistant for a Laravel application using a MySQL database. Always generate valid MySQL syntax only.
@@ -59,9 +75,16 @@ Instructions:
 - Use lowercase column names like 'created_at'.
 - Assume all questions are safe unless they explicitly ask to *change* the data.
 
+Sensitive Data Handling:
+- If the user asks to *exclude sensitive data*, skip any columns that may contain passwords, secrets, tokens, or API keys (like 'password', 'secret', 'api_key', 'token') in your query.
+
 User Question: {$question}
+
+If the user did not request exclusion of sensitive data, continue with normal behavior. If exclusion is requested, apply the rule above and make sure to mention this in your response.
+
 EOT;
     }
+
 
 
 

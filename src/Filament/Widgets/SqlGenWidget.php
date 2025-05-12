@@ -41,12 +41,14 @@ class SqlGenWidget extends Widget
         $cleanQuery = '';
         $responseTimeMs = null;
 
-        // Check if there are any notes and prepend them to the message before executing the query
+        // ✅ Prepend notes at the very beginning
         if (!empty($notes)) {
-            $message = "<div class='mt-2 text-sm text-blue-600'>" . implode('<br>', array_map('e', $notes)) . "</div>";
+            $message .= "<div class='mt-2 text-sm text-blue-600'>" .
+                implode('<br>', array_map('e', $notes)) . "</div>";
         }
 
         if (empty($sqlQuery)) {
+            // ✅ Still prepend notes even when SQL is empty
             $message .= "ℹ️ I couldn't process your request at the moment. Please try again.";
         } else {
             $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
@@ -55,13 +57,9 @@ class SqlGenWidget extends Widget
                 $message .= "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
             } else {
                 try {
-                    // Start measuring query execution time
-                    $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
-
-                    // Execute the query and format the results
+                    // Execute the query
                     $results = DB::select($cleanQuery);
-                    $message .= $this->formatResults($results);  // Append formatted results
-                    $this->logSqlGenInteraction($this->question, $cleanQuery, json_encode($results), $responseTimeMs);
+                    $message .= $this->formatResults($results);
                 } catch (\Exception $e) {
                     Log::error('SQL query execution failed', [
                         'sql_query' => $cleanQuery,
@@ -72,12 +70,13 @@ class SqlGenWidget extends Widget
             }
         }
 
-        // Log the interaction with response time
+        // ✅ Only log once, here
         $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
         $this->logSqlGenInteraction($this->question, $cleanQuery, $message, $responseTimeMs);
 
         return $message;
     }
+
 
 
     protected function logSqlGenInteraction(string $question, string $sqlQuery, string $response, float $responseTimeMs): void
