@@ -19,7 +19,7 @@ class SqlGenWidget extends Widget
 
     public function ask()
     {
-        $start = microtime(true); // start timer
+        $start = microtime(true);
         $service = $this->resolveSqlService();
         $sqlQuery = $service->generateSql($this->question);
         $this->notes = $sqlQuery['notes'] ?? []; // Save notes separately
@@ -41,14 +41,13 @@ class SqlGenWidget extends Widget
         $cleanQuery = '';
         $responseTimeMs = null;
 
-        // ✅ Prepend notes at the very beginning
         if (!empty($notes)) {
             $message .= "<div class='mt-2 text-sm text-blue-600'>" .
                 implode('<br>', array_map('e', $notes)) . "</div>";
         }
 
         if (empty($sqlQuery)) {
-            // ✅ Still prepend notes even when SQL is empty
+
             $message .= "ℹ️ I couldn't process your request at the moment. Please try again.";
         } else {
             $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
@@ -57,7 +56,6 @@ class SqlGenWidget extends Widget
                 $message .= "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
             } else {
                 try {
-                    // Execute the query
                     $results = DB::select($cleanQuery);
                     $message .= $this->formatResults($results);
                 } catch (\Exception $e) {
@@ -65,12 +63,11 @@ class SqlGenWidget extends Widget
                         'sql_query' => $cleanQuery,
                         'exception' => $e->getMessage(),
                     ]);
-                    $message .= "❌ There was an issue processing your request. Please try again later.";
+                    $message .= "ℹ️ Something went wrong. Please try again later.";
                 }
             }
         }
 
-        // ✅ Only log once, here
         $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
         $this->logSqlGenInteraction($this->question, $cleanQuery, $message, $responseTimeMs);
 
@@ -81,9 +78,8 @@ class SqlGenWidget extends Widget
 
     protected function logSqlGenInteraction(string $question, string $sqlQuery, string $response, float $responseTimeMs): void
     {
-        // Create a new record in the `sql_gen_logs` table
         SqlGenLog::create([
-            'question' => $question,  // Store the original question
+            'question' => $question,
             'sql_query' => $sqlQuery,
             'response' => $response,
             'response_time_ms' => $responseTimeMs,

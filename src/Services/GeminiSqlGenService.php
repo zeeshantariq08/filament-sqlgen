@@ -37,7 +37,7 @@ class GeminiSqlGenService implements SqlGenServiceInterface
             Log::error('Gemini API request failed', ['exception' => $e->getMessage()]);
             return [
                 'sql' => '',
-                'notes' => ['❌ Failed to connect to Gemini API.']
+                'notes' => ['ℹ️ Something went wrong.']
             ];
         }
     }
@@ -48,10 +48,8 @@ class GeminiSqlGenService implements SqlGenServiceInterface
         $today = now()->format('Y-m-d');
         $currentYear = now()->year;
 
-        // Sensitive columns list
         $sensitiveColumns = ['password', 'secret', 'api_key', 'token'];
 
-        // Check if the user mentioned excluding sensitive data
         $excludeSensitiveData = stripos($question, 'exclude sensitive data') !== false;
 
         return <<<EOT
@@ -130,10 +128,8 @@ EOT;
         $data = $response->json();
         $rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
-        // Remove markdown
         $cleanText = preg_replace('/```(sql)?|```/', '', $rawText);
 
-        // Extract SQL part and note part
         $sql = trim(preg_replace('/ℹ️.*$/m', '', $cleanText)); // remove inline note
         $notes = [];
 
