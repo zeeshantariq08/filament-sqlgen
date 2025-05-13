@@ -32,11 +32,14 @@ class GeminiSqlGenService implements SqlGenServiceInterface
                 ]
             ]);
 
+            dd($response->json(), $question);
+
+
             return $this->parseResponse($response);
         } catch (\Exception $e) {
             Log::error('Gemini API request failed', ['exception' => $e->getMessage()]);
             return [
-                'sql' => '',
+                'queries' => [],
                 'notes' => ['ℹ️ Something went wrong.']
             ];
         }
@@ -48,10 +51,6 @@ class GeminiSqlGenService implements SqlGenServiceInterface
         $today = now()->format('Y-m-d');
         $currentYear = now()->year;
 
-        $sensitiveColumns = ['password', 'secret', 'api_key', 'token'];
-
-        $excludeSensitiveData = stripos($question, 'exclude sensitive data') !== false;
-
         return <<<EOT
 You are a strict SQL assistant for a Laravel application using a MySQL database. Always generate valid MySQL syntax only.
 ONLY use the tables and columns provided below. DO NOT invent any columns or tables.
@@ -62,29 +61,25 @@ Schema (use ONLY these tables and columns):
 Assume today's date is {$today}. If the user asks about a specific month (e.g. "April") but does not mention a year, always assume they mean {$currentYear}.
 
 Instructions:
-- ✅ Always return a valid SELECT SQL query based on the user request.
-- ❌ NEVER include any column that is not listed above.
-- ❌ NEVER assume column names like "postcode", "phone", etc. unless they are explicitly listed.
-- ❌ NEVER return queries that modify data (DROP, DELETE, INSERT, UPDATE, TRUNCATE).
+- ✅ Always return one or more SELECT SQL queries based on the user request.
+- ✅ For each query, start with a short plain-text description or heading (e.g. "🔍 List of users created this month"), followed by the SQL query.
+- ✅ If multiple queries are needed, separate each with a blank line.
+- ❌ NEVER use markdown (no ```sql).
+- ❌ NEVER return queries that modify data (INSERT, UPDATE, DELETE, etc.).
+- ❌ Do NOT invent columns or tables not present in the schema.
 - ❌ If any requested column is not found in the schema, SKIP it and ADD a note like:
   "ℹ️ Column 'postcode' not found. Using only available columns."
   Always add a note when a column is missing, even if the query is valid without it.
 - Do NOT include markdown (no ```sql).
 - Use lowercase column names like 'created_at'.
-- Assume all questions are safe unless they explicitly ask to *change* the data.
+- Use lowercase column names like 'created_at'.
 
-Sensitive Data Handling:
-- If the user asks to *exclude sensitive data*, skip any columns that may contain passwords, secrets, tokens, or API keys (like 'password', 'secret', 'api_key', 'token') in your query.
+Sensitive Data:
+- If user asks to exclude sensitive data, skip columns like password, token, api_key, secret.
 
 User Question: {$question}
-
-If the user did not request exclusion of sensitive data, continue with normal behavior. If exclusion is requested, apply the rule above and make sure to mention this in your response.
-
 EOT;
     }
-
-
-
 
     protected function getDatabaseSchemaSummary(): string
     {
@@ -127,24 +122,36 @@ EOT;
     {
         $data = $response->json();
         $rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        $cleanText = trim($rawText);
 
-        $cleanText = preg_replace('/```(sql)?|```/', '', $rawText);
+        // Split based on the 🔍 indicator
+        $blocks = preg_split('/🔍\s*/', $cleanText, -1, PREG_SPLIT_NO_EMPTY);
 
-        $sql = trim(preg_replace('/ℹ️.*$/m', '', $cleanText)); // remove inline note
-        $notes = [];
+        $queries = [];
 
-        // Extract any ℹ️ or ❌ notes
-        if (preg_match_all('/(ℹ️|❌).*$/m', $cleanText, $matches)) {
-            $notes = array_map('trim', $matches[0]);
+        foreach ($blocks as $block) {
+            $lines = preg_split('/\r\n|\r|\n/', trim($block));
+
+            if (count($lines) >= 2) {
+                $description = '🔍 ' . trim($lines[0]);
+                $query = implode("\n", array_slice($lines, 1));
+
+                // Clean the SQL query by removing markdown code block syntax (```sql and ``` )
+                $query = preg_replace('/```sql|```/', '', $query);
+
+                $queries[] = [
+                    'description' => $description,
+                    'query' => trim($query),
+                ];
+            }
         }
 
-        // If no note found, add a fallback note
-//        if (empty($notes)) {
-//            $notes[] = "ℹ️ Column(s) missing from the schema.";
-//        }
+        // Extract notes like ℹ️ and ❌
+        preg_match_all('/(ℹ️|❌)[^\n]*/', $cleanText, $noteMatches);
+        $notes = $noteMatches[0] ?? [];
 
         return [
-            'sql' => $sql,
+            'queries' => $queries,
             'notes' => $notes,
         ];
     }

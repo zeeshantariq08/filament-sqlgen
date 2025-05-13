@@ -16,14 +16,14 @@ class SqlGenWidget extends Widget
     public ?string $answer = '';
     public array $notes = [];
 
-
     public function ask()
     {
         $start = microtime(true);
         $service = $this->resolveSqlService();
-        $sqlQuery = $service->generateSql($this->question);
-        $this->notes = $sqlQuery['notes'] ?? []; // Save notes separately
-        $this->answer = $this->handleDynamicQuery($sqlQuery['sql'], $start, $sqlQuery['notes']);
+        $response = $service->generateSql($this->question);
+
+        $this->notes = $response['notes'] ?? [];
+        $this->answer = $this->handleMultipleQueries($response['queries'] ?? [], $start, $this->notes);
     }
 
     protected function resolveSqlService(): GeminiSqlGenService
@@ -35,41 +35,50 @@ class SqlGenWidget extends Widget
         };
     }
 
-    protected function handleDynamicQuery(string $sqlQuery, float $startTime, array $notes = []): string
+    protected function handleMultipleQueries(array $queries, float $startTime, array $notes = []): string
     {
         $message = '';
-        $cleanQuery = '';
-        $responseTimeMs = null;
+        $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
 
+        // Show notes (if any)
         if (!empty($notes)) {
             $message .= "<div class='mt-2 text-sm text-blue-600'>" .
                 implode('<br>', array_map('e', $notes)) . "</div>";
         }
 
-        if (empty($sqlQuery)) {
+        // Handle each query
+        foreach ($queries as $queryData) {
+            $description = e($queryData['description'] ?? '🔍 Query');
+            $sqlQuery = trim($queryData['query'] ?? '');
 
-            $message .= "ℹ️ I couldn't process your request at the moment. Please try again.";
-        } else {
-            $cleanQuery = trim(preg_replace('/^sql\s*/i', '', $sqlQuery));
+            $message .= "<div class='mt-4'>";
+            $message .= "<h3 class='font-semibold text-gray-700 mb-1'>{$description}</h3>";
 
-            if (!preg_match('/^\s*select\s/i', $cleanQuery)) {
-                $message .= "⚠️ I'm only able to show information from the database, not make changes. Please try asking your question differently to view data.";
+            if (empty($sqlQuery)) {
+                $message .= "<p class='text-sm text-gray-500'>⚠️ No SQL query was generated.</p>";
             } else {
                 try {
-                    $results = DB::select($cleanQuery);
+                    // Log and dd the generated query to debug
+                    Log::info("Generated SQL query: {$sqlQuery}");
+                    // dd($sqlQuery); // Uncomment to dump and die for further inspection
+
+                    // Execute the query if it's a valid SELECT query
+                    $results = DB::select($sqlQuery);
                     $message .= $this->formatResults($results);
                 } catch (\Exception $e) {
                     Log::error('SQL query execution failed', [
-                        'sql_query' => $cleanQuery,
+                        'sql_query' => $sqlQuery,
                         'exception' => $e->getMessage(),
                     ]);
-                    $message .= "ℹ️ Something went wrong. Please try again later.";
+                    $message .= "<p class='text-sm text-red-600'>⚠️ Query failed: " . e($e->getMessage()) . "</p>";
                 }
             }
-        }
 
-        $responseTimeMs = round((microtime(true) - $startTime) * 1000, 2);
-        $this->logSqlGenInteraction($this->question, $cleanQuery, $message, $responseTimeMs);
+            $message .= "</div>";
+
+            // Log each query separately
+            $this->logSqlGenInteraction($this->question, $sqlQuery, $message, $responseTimeMs);
+        }
 
         return $message;
     }
