@@ -16,6 +16,10 @@ class SqlGenWidget extends Widget
     public ?string $answer = '';
     public array $notes = [];
 
+    public function getColumnSpan(): int | string | array
+    {
+        return config('filament-sqlgen.widget_column_span', 2);
+    }
 
     public function ask()
     {

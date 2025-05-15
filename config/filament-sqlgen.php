@@ -42,4 +42,13 @@ return [
     */
     'database_connection' => env('DB_CONNECTION_LOGS', 'mysql'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Widget Column Span
+    |--------------------------------------------------------------------------
+    | Controls how many columns wide the SQLGen widget will be.
+    | Can be an integer 1-12 or "full" for full width.
+    */
+    'widget_column_span' => env('SQLGEN_WIDGET_COLUMN_SPAN', 1),
+
 ];
