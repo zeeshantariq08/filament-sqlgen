@@ -74,11 +74,12 @@ Instructions:
 - Assume all questions are safe unless they explicitly ask to *change* the data.
 
 Sensitive Data Handling:
-- If the user asks to *exclude sensitive data*, skip any columns that may contain passwords, secrets, tokens, or API keys (like 'password', 'secret', 'api_key', 'token') in your query.
+- If the user asks to *include sensitive data*, skip any columns that may contain passwords, secrets, tokens, or API keys (like 'password', 'secret', 'api_key', 'token') in your query.
 
 User Question: {$question}
 
-If the user did not request exclusion of sensitive data, continue with normal behavior. If exclusion is requested, apply the rule above and make sure to mention this in your response.
+If the user asks to include sensitive data, add a note like:
+"ℹ️ Sensitive information requested. To ensure privacy and data protection, only general, non-sensitive details have been provided."
 
 EOT;
     }
