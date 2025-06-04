@@ -33,11 +33,11 @@ class SqlGenWidget extends Widget
     protected function resolveSqlService(): GeminiSqlGenService
     {
         return match (config('filament-sqlgen.provider')) {
-            'gemini' => new GeminiSqlGenService(),
             // 'openai' => new OpenAiSqlGenService(),
-            default => new GeminiSqlGenService(),
+            default => app(GeminiSqlGenService::class),
         };
     }
+
 
     protected function handleDynamicQuery(string $sqlQuery, float $startTime, array $notes = []): string
     {

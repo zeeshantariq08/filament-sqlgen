@@ -7,6 +7,7 @@ use Spatie\LaravelPackageTools\Package;
 use Filament\Resources\Resource;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Livewire\Livewire;
+use ZeeshanTariq\FilamentSqlGen\Console\Commands\ClearSchemaCache;
 use ZeeshanTariq\FilamentSqlGen\Filament\Resources\SqlGenLogResource;
 use ZeeshanTariq\FilamentSqlGen\Filament\Widgets\SqlGenWidget;
 
@@ -50,6 +51,12 @@ class FilamentSqlGenServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../database/schema/database_schema.yaml' => database_path('schema/database_schema.yaml'),
         ], 'filament-sqlgen-schema');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ClearSchemaCache::class,
+            ]);
+        }
     }
 
 }
